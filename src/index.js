@@ -158,25 +158,7 @@ fastify.register(async function (fastify) {
 
 // REST API routes
 fastify.get('/', async () => ({ status: 'up' }));
+fastify.register(require('./routes/authRoutes'));
 
-fastify.post('/register', async (req, reply) => {
-  const { username, password } = req.body;
-  // Save user credentials (in-memory for now)
-  users[username] = password;
-  reply.send({ message: 'User registered successfully' });
-});
 
-fastify.post('/login', async (req, reply) => {
-  const { username } = req.body;
-  const token = fastify.jwt.sign({ username });
-  reply.send({ token });
-});
-
-// Start the server
-fastify.listen({ port: 3000, host: '0.0.0.0' }, (err, address) => {
-  if (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-  fastify.log.info(`Server listening on ${address}`);
-});
+module.exports = fastify;
