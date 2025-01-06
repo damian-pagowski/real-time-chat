@@ -1,0 +1,28 @@
+{
+  "name": "websocketeer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/jwt": "^9.0.2",
+    "@fastify/websocket": "^11.0.1",
+    "fastify": "^5.2.0",
+    "fastify-cors": "^6.0.3",
+    "fastify-jwt": "^4.1.3",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.17.0",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.7.2"
+  }
+}
