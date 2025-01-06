@@ -3,7 +3,8 @@
 const WebSocket = require('ws');
 
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNsaWVudCIsImlhdCI6MTczNjE5MTE3M30.FPMsfukpdUtb3xmm7_MLG1Yu1SFH1R13OVAKc8aSgdc';
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNsaWVudCIsImlhdCI6MTczNjIwMzc1OX0.ump-Y0VngFGkkDwfaD5flx3SoJahoO8pwCYFhofxaZE';
+
 
 
 const ws = new WebSocket(`ws://localhost:3000/ws`, {
@@ -19,7 +20,19 @@ ws.on('open', () => {
 
 // Event: When a message is received
 ws.on('message', (data) => {
-  console.log('Received:', data.toString());
+  const message = JSON.parse(data.toString());
+  console.log('Received:', message);
+
+  // Check if the message has an ID to send a read receipt
+  if (message.messageId) {
+    const ack = JSON.stringify({
+      type: 'readReceipt',
+      messageId: message.messageId,
+    });
+
+    ws.send(ack);
+    console.log(`Acknowledgment sent for messageId: ${message.messageId}`);
+  }
 });
 
 // Event: When an error occurs
