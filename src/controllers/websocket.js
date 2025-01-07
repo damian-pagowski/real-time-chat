@@ -4,7 +4,7 @@ const {
     getMessagesForGroup,
     getMessagesBetweenUsers,
     getSenderForMessage
-  } = require('../db/messages');
+} = require('../db/messages');
 
 
 const { createGroup, findGroupByName } = require('../db/groups');
@@ -16,43 +16,43 @@ const sendMessage = (socket, message) => {
 
 const handleDirectMessage = (message, username, socket, users) => {
     try {
-      const { recipient, text } = JSON.parse(message);
-      const recipientSocket = users.get(recipient);
-  
-      if (!recipientSocket) {
-        sendMessage(socket, { error: `User ${recipient} is not connected` });
-        return;
-      }
-  
-      // Save the message to the database
-      const { lastInsertRowid } = addMessage(username, recipient, text);
-  
-      // Send the message to the recipient
-      const timestamp = Date.now();
-      sendMessage(recipientSocket, { sender: username, text, messageId: lastInsertRowid, timestamp });
+        const { recipient, text } = JSON.parse(message);
+        const recipientSocket = users.get(recipient);
+
+        if (!recipientSocket) {
+            sendMessage(socket, { error: `User ${recipient} is not connected` });
+            return;
+        }
+
+        // Save the message to the database
+        const { lastInsertRowid } = addMessage(username, recipient, text);
+
+        // Send the message to the recipient
+        const timestamp = Date.now();
+        sendMessage(recipientSocket, { sender: username, text, messageId: lastInsertRowid, timestamp });
     } catch (err) {
-      sendMessage(socket, { error: 'Invalid message format for direct message' });
+        sendMessage(socket, { error: 'Invalid message format for direct message' });
     }
-  };
-  
-  const handleReadReceipt = (message, username, socket, users) => {
+};
+
+const handleReadReceipt = (message, username, socket, users) => {
     try {
-      const { messageId } = JSON.parse(message);
-  
-      // Mark the message as read in the database
-      markMessageAsRead(messageId);
-  
-      // Notify the sender about the read receipt
-      const sender = getSenderForMessage(messageId); // Fetch sender from the database
-      const senderSocket = users.get(sender);
-  
-      if (senderSocket) {
-        sendMessage(senderSocket, { type: 'readReceipt', messageId, reader: username });
-      }
+        const { messageId } = JSON.parse(message);
+
+        // Mark the message as read in the database
+        markMessageAsRead(messageId);
+
+        // Notify the sender about the read receipt
+        const sender = getSenderForMessage(messageId); // Fetch sender from the database
+        const senderSocket = users.get(sender);
+
+        if (senderSocket) {
+            sendMessage(senderSocket, { type: 'readReceipt', messageId, reader: username });
+        }
     } catch (err) {
-      sendMessage(socket, { error: 'Invalid message format for read receipt' });
+        sendMessage(socket, { error: 'Invalid message format for read receipt' });
     }
-  };
+};
 
 const handleBroadcastMessage = (message, username, socket, users) => {
     try {
@@ -108,7 +108,7 @@ const handleJoinGroup = (message, username, socket, groups) => {
         if (!groups.has(group)) {
             groups.set(group, new Set());
         }
-        if(!findGroupByName(group)){
+        if (!findGroupByName(group)) {
             createGroup(group);
         }
 
@@ -132,6 +132,47 @@ const handleLeaveGroup = (message, username, socket, groups) => {
         }
     } catch (err) {
         sendMessage(socket, { error: 'Invalid message format for leaving group' });
+    }
+};
+
+const handleTypingIndicator = (message, username, socket, users, groups) => {
+    try {
+        const { status, recipient, group } = JSON.parse(message);
+
+        if (recipient) {
+            // Direct chat typing indicator
+            const recipientSocket = users.get(recipient);
+            if (recipientSocket) {
+                sendMessage(recipientSocket, {
+                    type: 'typing',
+                    sender: username,
+                    status,
+                });
+            }
+        } else if (group) {
+            // Group chat typing indicator
+            if (groups.has(group)) {
+                groups.get(group).forEach((member) => {
+                    if (member !== username) {
+                        const recipientSocket = users.get(member);
+                        if (recipientSocket) {
+                            sendMessage(recipientSocket, {
+                                type: 'typing',
+                                sender: username,
+                                group,
+                                status,
+                            });
+                        }
+                    }
+                });
+            } else {
+                sendMessage(socket, { error: `Group ${group} does not exist` });
+            }
+        } else {
+            sendMessage(socket, { error: 'Invalid typing indicator format' });
+        }
+    } catch (err) {
+        sendMessage(socket, { error: 'Error processing typing indicator' });
     }
 };
 
@@ -187,6 +228,9 @@ module.exports = async (fastify) => {
                         break;
                     case 'readReceipt':
                         handleReadReceipt(message, username, socket, users);
+                        break;
+                    case 'typing':
+                        handleTypingIndicator(message, username, socket, users, groups);
                         break;
                     default:
                         sendMessage(socket, { error: 'Unsupported message type' });

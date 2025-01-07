@@ -32,7 +32,10 @@ ws.on('message', (data) => {
 
     ws.send(ack);
     console.log(`Acknowledgment sent for messageId: ${message.messageId}`);
-  }
+  }  
+    if (message.type === 'typing') {
+      console.log(`${message.sender} is ${message.status} typing...`);
+    }
 });
 
 // Event: When an error occurs
