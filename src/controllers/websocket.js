@@ -176,6 +176,18 @@ const handleTypingIndicator = (message, username, socket, users, groups) => {
     }
 };
 
+const broadcastPresence = (users, username, status) => {
+    const message = {
+      type: 'presence',
+      user: username,
+      status,
+    };
+  
+    users.forEach((socket) => {
+      socket.send(JSON.stringify(message));
+    });
+  };
+
 // WebSocket route handler
 module.exports = async (fastify) => {
     fastify.get('/ws', { websocket: true }, (socket, req) => {
@@ -200,6 +212,9 @@ module.exports = async (fastify) => {
         const users = fastify.users || new Map();
         fastify.users = users;
         users.set(username, socket);
+
+        // Broadcast presence
+        broadcastPresence(users, username, 'online');
 
         // Track groups
         const groups = fastify.groups || new Map();
@@ -243,6 +258,7 @@ module.exports = async (fastify) => {
         // Handle disconnection
         socket.on('close', () => {
             users.delete(username);
+            broadcastPresence(users, username, 'offline');
             groups.forEach((members) => members.delete(username));
             console.log(`${username} disconnected`);
         });
