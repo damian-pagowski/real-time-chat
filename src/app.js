@@ -1,7 +1,10 @@
 const fastify = require('fastify')({ logger: true });
+const fastifyCors = require('@fastify/cors');
+
 const websocket = require('@fastify/websocket');
 const jwt = require('@fastify/jwt');
 
+fastify.register(fastifyCors, { origin: '*' });
 fastify.register(websocket);
 fastify.register(jwt, { secret: 'your-secure-secret' });
 
