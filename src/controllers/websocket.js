@@ -29,7 +29,7 @@ const handleDirectMessage = (message, username, socket, users) => {
 
         // Send the message to the recipient
         const timestamp = Date.now();
-        sendMessage(recipientSocket, { sender: username, text, messageId: lastInsertRowid, timestamp });
+        sendMessage(recipientSocket, { sender: username, text, messageId: lastInsertRowid, timestamp, type: "direct" });
     } catch (err) {
         sendMessage(socket, { error: 'Invalid message format for direct message' });
     }
@@ -191,17 +191,20 @@ const broadcastPresence = (users, username, status) => {
 // WebSocket route handler
 module.exports = async (fastify) => {
     fastify.get('/ws', { websocket: true }, (socket, req) => {
-        const token = req.headers.authorization;
+        // const token = req.headers.authorization;
+        const url = require('url');
+        const query = url.parse(req.url, true).query;
+        const token = query.token;
 
         if (!token) {
             socket.close(4001, 'Unauthorized');
             return;
         }
-
         // Validate token and extract username
         let username;
         try {
-            const decoded = fastify.jwt.verify(token.replace('Bearer ', ''));
+            const decoded = fastify.jwt.verify(token);
+            console.log('Connected user:', decoded.username);
             username = decoded.username;
         } catch (err) {
             socket.close(4002, 'Invalid token');
@@ -215,6 +218,7 @@ module.exports = async (fastify) => {
 
         // Broadcast presence
         broadcastPresence(users, username, 'online');
+        
 
         // Track groups
         const groups = fastify.groups || new Map();

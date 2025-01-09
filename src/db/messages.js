@@ -28,6 +28,30 @@ const getUnreadMessagesForUser = (username) => {
   return stmt.all(username);
 };
 
+const getConversationsForUser = (user) => {
+  const stmt = db.prepare(`
+    SELECT DISTINCT
+      CASE
+        WHEN sender = ? THEN recipient
+        ELSE sender
+      END AS username,
+      MAX(timestamp) AS last_interaction,
+      (
+        SELECT text
+        FROM messages
+        WHERE (sender = ? OR recipient = ?)
+        ORDER BY timestamp DESC
+        LIMIT 1
+      ) AS lastMessage
+    FROM messages
+    WHERE sender = ? OR recipient = ?
+    GROUP BY username
+    ORDER BY last_interaction DESC;
+  `);
+
+  return stmt.all(user, user, user, user, user); 
+};
+
 // Get all messages exchanged between two users
 const getMessagesBetweenUsers = (user1, user2) => {
   const stmt = db.prepare(`
@@ -55,5 +79,6 @@ module.exports = {
   markMessageAsRead,
   getUnreadMessagesForUser,
   getMessagesBetweenUsers,
+  getConversationsForUser,
   getSenderForMessage
 };

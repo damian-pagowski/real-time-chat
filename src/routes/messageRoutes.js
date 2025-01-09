@@ -1,4 +1,4 @@
-const { getMessagesForGroup, getMessagesBetweenUsers } = require('../db/messages');
+const { getMessagesForGroup, getMessagesBetweenUsers, getConversationsForUser } = require('../db/messages');
 
 module.exports = async (fastify) => {
   fastify.get('/messages/direct', async (req, reply) => {
@@ -23,5 +23,23 @@ module.exports = async (fastify) => {
 
     const messages = getMessagesForGroup(groupId);
     reply.send(messages);
+  });
+
+  fastify.get('/messages/chats', async (req, reply) => {
+
+    const { user } = req.query;
+
+    if (!user) {
+      reply.status(400).send({ error: 'The user query parameter is required.' });
+      return;
+    }
+
+    try {
+      const conversations = getConversationsForUser(user);
+      reply.send(conversations);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      reply.status(500).send({ error: 'Internal Server Error' });
+    }
   });
 };

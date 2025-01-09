@@ -3,7 +3,7 @@
 const WebSocket = require('ws');
 
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNsaWVudCIsImlhdCI6MTczNjIwMzc1OX0.ump-Y0VngFGkkDwfaD5flx3SoJahoO8pwCYFhofxaZE';
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNsaWVudCIsImlhdCI6MTczNjMwODI2NH0.NndHSE4NM4tIl1F_jzJB22WHnH4wlcFPVVGyQjwODQ0';
 
 
 
