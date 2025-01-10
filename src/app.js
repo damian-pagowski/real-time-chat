@@ -11,6 +11,6 @@ fastify.register(jwt, { secret: 'your-secure-secret' });
 fastify.register(require('./routes/authRoutes'));
 fastify.register(require('./routes/messageRoutes'));
 
-fastify.register(require('./controllers/websocket'));
 
+fastify.register(require('./routes/websocketRouter'));
 module.exports = fastify;
