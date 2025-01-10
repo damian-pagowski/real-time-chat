@@ -14,6 +14,10 @@ const sendMessage = (socket, message) => {
     socket.send(JSON.stringify(message));
 };
 
+const getActiveUsers = (users) => {
+    return Array.from(users.keys());
+};
+
 const handleDirectMessage = (message, username, socket, users) => {
     try {
         const { recipient, text } = JSON.parse(message);
@@ -50,7 +54,7 @@ const handleReadReceipt = (message, username, socket, users) => {
             sendMessage(senderSocket, { type: 'readReceipt', messageId, reader: username });
         }
     } catch (err) {
-        sendMessage(socket, { error: 'Invalid message format for read receipt' });
+        sendMessage(socket, { error: 'Invalid message format for read receipt', message: JSON.parse(message) });
     }
 };
 
@@ -166,27 +170,28 @@ const handleTypingIndicator = (message, username, socket, users, groups) => {
                     }
                 });
             } else {
-                sendMessage(socket, { error: `Group ${group} does not exist` });
+                sendMessage(socket, { error: `Group ${group} does not exist`, message });
             }
         } else {
-            sendMessage(socket, { error: 'Invalid typing indicator format' });
+            sendMessage(socket, { error: 'Invalid typing indicator format', message });
         }
     } catch (err) {
-        sendMessage(socket, { error: 'Error processing typing indicator' });
+        sendMessage(socket, { error: 'Error processing typing indicator', message });
     }
 };
 
 const broadcastPresence = (users, username, status) => {
     const message = {
-      type: 'presence',
-      user: username,
-      status,
+        type: 'presence',
+        user: username,
+        status,
     };
-  
+
     users.forEach((socket) => {
-      socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(message));
     });
-  };
+};
+
 
 // WebSocket route handler
 module.exports = async (fastify) => {
@@ -218,7 +223,7 @@ module.exports = async (fastify) => {
 
         // Broadcast presence
         broadcastPresence(users, username, 'online');
-        
+
 
         // Track groups
         const groups = fastify.groups || new Map();
@@ -266,5 +271,15 @@ module.exports = async (fastify) => {
             groups.forEach((members) => members.delete(username));
             console.log(`${username} disconnected`);
         });
+    });
+    fastify.get('/users/active', async (req, reply) => {
+        try {
+            const users = fastify.users || new Map(); // Ensure users Map exists
+            const activeUsers = getActiveUsers(users); // Fetch active usernames
+            reply.send(activeUsers); // Respond with the active users
+        } catch (error) {
+            console.error('Error fetching active users:', error);
+            reply.status(500).send({ error: 'Internal Server Error' });
+        }
     });
 };
