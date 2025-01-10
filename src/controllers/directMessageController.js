@@ -1,65 +1,60 @@
 const { sendMessage } = require('../utils/socketUtils');
-const { ValidationError } = require('../utils/errors');
+const { ValidationError, ServerError } = require('../utils/errors');
 const {
     addMessage,
     markMessageAsRead,
     getSenderForMessage,
-} = require('../db/messages');
+} = require('../repositories/messageRepository');
 
-const handleDirectMessage = (message, username, socket, users) => {
+const handleDirectMessage = async (message, username, socket, users) => {
     try {
-        const parsedMessage = JSON.parse(message);
+        const { recipient, text } = JSON.parse(message);
 
-        if (!parsedMessage.recipient || typeof parsedMessage.recipient !== 'string') {
+        if (!recipient || typeof recipient !== 'string') {
             throw new ValidationError('Direct message must include a valid "recipient" field');
         }
-        if (!parsedMessage.text || typeof parsedMessage.text !== 'string') {
+        if (!text || typeof text !== 'string') {
             throw new ValidationError('Direct message must include a valid "text" field');
         }
 
-        const { recipient, text } = parsedMessage;
         const recipientSocket = users.get(recipient);
-
         if (!recipientSocket) {
             sendMessage(socket, { error: `User ${recipient} is not connected` });
             return;
         }
 
-        const { lastInsertRowid } = addMessage(username, recipient, text);
+        const savedMessage = await addMessage(username, recipient, text);
 
         const timestamp = Date.now();
         sendMessage(recipientSocket, {
             sender: username,
             text,
-            messageId: lastInsertRowid,
+            messageId: savedMessage.id,
             timestamp,
             type: 'direct',
         });
     } catch (err) {
         if (err instanceof ValidationError) {
-            sendMessage(socket, { error: err.message }); 
+            sendMessage(socket, { error: err.message });
         } else {
             console.error('Error handling direct message:', err);
-            sendMessage(socket, { error: 'Failed to send direct message', details: err.message });
+            throw new ServerError('Failed to send direct message', err); 
         }
     }
 };
 
-const handleReadReceipt = (message, username, socket, users) => {
+const handleReadReceipt = async (message, username, socket, users) => {
     try {
-        const parsedMessage = JSON.parse(message);
+        const { messageId } = JSON.parse(message);
 
-        if (!parsedMessage.messageId || typeof parsedMessage.messageId !== 'number') {
+        if (!messageId || typeof messageId !== 'number') {
             throw new ValidationError('Read receipt must include a valid "messageId" field');
         }
 
-        const { messageId } = parsedMessage;
+        await markMessageAsRead(messageId);
 
-        markMessageAsRead(messageId);
-
-        const sender = getSenderForMessage(messageId);
-        const senderSocket = users.get(sender);
-
+        const sender = await getSenderForMessage(messageId);
+        const senderSocket = users.get(sender.username);
         if (senderSocket) {
             sendMessage(senderSocket, {
                 type: 'readReceipt',
@@ -72,7 +67,7 @@ const handleReadReceipt = (message, username, socket, users) => {
             sendMessage(socket, { error: err.message });
         } else {
             console.error('Error handling read receipt:', err);
-            sendMessage(socket, { error: 'Failed to handle read receipt', details: err.message });
+            throw new ServerError('Failed to handle read receipt', err);
         }
     }
 };

@@ -1,9 +1,15 @@
 const { ValidationError } = require('../utils/errors');
 const { sendMessage } = require('../utils/socketUtils');
-const { createGroup, findGroupByName } = require('../db/groups');
-const { addMessage } = require('../db/messages');
+const {
+    createGroup, 
+    findGroupByName,
+    addMemberToGroup,
+    removeMemberFromGroup,
+    getGroupMembers,
+} = require('../repositories/groupRepository'); 
 
-const handleGroupMessage = (message, username, socket, users, groups) => {
+const { addMessage } = require('../repositories/messageRepository');
+const handleGroupMessage = async (message, username, socket, users, groups) => {
     try {
         const parsedMessage = JSON.parse(message);
 
@@ -16,16 +22,17 @@ const handleGroupMessage = (message, username, socket, users, groups) => {
 
         const { group, text } = parsedMessage;
 
-        const groupData = findGroupByName(group);
+        const groupData = await findGroupByName(group); 
         if (!groupData) {
             throw new ValidationError(`Group "${group}" does not exist`);
         }
 
-        addMessage(username, null, text, groupData.id);
+        await addMessage(username, null, text, groupData.id);
 
         const timestamp = Date.now();
-        groups.get(group)?.forEach((member) => {
-            const recipientSocket = users.get(member);
+        const members = await getGroupMembers(groupData.id); 
+        members.forEach((member) => {
+            const recipientSocket = users.get(member.username);
             if (recipientSocket) {
                 sendMessage(recipientSocket, {
                     sender: username,
@@ -45,7 +52,7 @@ const handleGroupMessage = (message, username, socket, users, groups) => {
     }
 };
 
-const handleJoinGroup = (message, username, socket, groups) => {
+const handleJoinGroup = async (message, username, socket, groups) => {
     try {
         const parsedMessage = JSON.parse(message);
 
@@ -55,14 +62,13 @@ const handleJoinGroup = (message, username, socket, groups) => {
 
         const { group } = parsedMessage;
 
-        if (!groups.has(group)) {
-            groups.set(group, new Set());
-        }
-        if (!findGroupByName(group)) {
-            createGroup(group);
+        let groupData = await findGroupByName(group); 
+        if (!groupData) {
+            groupData = await createGroup(group); 
         }
 
-        groups.get(group).add(username);
+        await addMemberToGroup(groupData.id, username); 
+
         sendMessage(socket, { message: `Joined group: ${group}` });
     } catch (err) {
         if (err instanceof ValidationError) {
@@ -74,7 +80,7 @@ const handleJoinGroup = (message, username, socket, groups) => {
     }
 };
 
-const handleLeaveGroup = (message, username, socket, groups) => {
+const handleLeaveGroup = async (message, username, socket, groups) => {
     try {
         const parsedMessage = JSON.parse(message);
 
@@ -84,12 +90,14 @@ const handleLeaveGroup = (message, username, socket, groups) => {
 
         const { group } = parsedMessage;
 
-        if (groups.has(group)) {
-            groups.get(group).delete(username);
-            sendMessage(socket, { message: `Left group: ${group}` });
-        } else {
+        const groupData = await findGroupByName(group);
+        if (!groupData) {
             throw new ValidationError(`Group "${group}" does not exist`);
         }
+
+        await removeMemberFromGroup(groupData.id, username);
+
+        sendMessage(socket, { message: `Left group: ${group}` });
     } catch (err) {
         if (err instanceof ValidationError) {
             sendMessage(socket, { error: err.message });

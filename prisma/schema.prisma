@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  password     String
+  sentMessages Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  groups       Group[]   @relation("GroupMembers") // Matches the named relation in `Group`
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  text        String
+  createdAt   DateTime @default(now())
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id]) // Named relation for sender
+  senderId    Int
+  recipient   User?    @relation("ReceivedMessages", fields: [recipientId], references: [id]) // Named relation for recipient
+  recipientId Int?
+  read        Boolean  @default(false)
+  group       Group?   @relation(fields: [groupId], references: [id])
+  groupId     Int?
+}
+
+model Group {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  members  User[]    @relation("GroupMembers") // Named relation for members
+  messages Message[] @relation
+}

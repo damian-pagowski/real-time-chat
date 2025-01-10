@@ -15,6 +15,7 @@
     "@fastify/cors": "^10.0.2",
     "@fastify/jwt": "^9.0.2",
     "@fastify/websocket": "^11.0.1",
+    "@prisma/client": "^6.2.1",
     "better-sqlite3": "^11.7.2",
     "fastify": "^5.2.0",
     "fastify-cors": "^6.0.3",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "eslint": "^9.17.0",
     "nodemon": "^3.1.9",
+    "prisma": "^6.2.1",
     "typescript": "^5.7.2"
   }
 }

@@ -1,7 +1,11 @@
+const { 
+  getDirectMessages, 
+  getGroupMessages, 
+  getUserConversationsNames 
+} = require('../controllers/messageController');
 const authenticationMiddleware = require('../middleware/authenticationMiddleware');
-const { getMessagesForGroup, getMessagesBetweenUsers, getConversationsForUser } = require('../db/messages');
+const validate = require('../middleware/ValidationMiddleware');
 const { directMessageSchema, groupMessageSchema, chatsSchema } = require('../schemas/messageSchemas');
-const validate = require('../middleware/validationMiddleware');
 
 module.exports = async (fastify) => {
   fastify.get(
@@ -9,28 +13,21 @@ module.exports = async (fastify) => {
     {
       preHandler: [
         authenticationMiddleware,
-        validate(directMessageSchema)
+        validate(directMessageSchema),
       ],
     },
-    async (req, reply) => {
-      const { user1, user2 } = req.query;
-      const messages = getMessagesBetweenUsers(user1, user2);
-      reply.send(messages);
-    });
+    getDirectMessages
+  );
 
   fastify.get(
     '/messages/group/:groupId',
     {
       preHandler: [
         authenticationMiddleware,
-        validate(groupMessageSchema)
+        validate(groupMessageSchema),
       ],
     },
-    async (req, reply) => {
-      const { groupId } = req.params;
-      const messages = getMessagesForGroup(groupId);
-      reply.send(messages);
-    }
+    getGroupMessages
   );
 
   fastify.get(
@@ -38,13 +35,9 @@ module.exports = async (fastify) => {
     {
       preHandler: [
         authenticationMiddleware,
-        validate(chatsSchema)
+        validate(chatsSchema),
       ],
     },
-    async (req, reply) => {
-      const { user } = req.query;
-      const conversations = getConversationsForUser(user);
-      reply.send(conversations);
-    }
+    getUserConversationsNames
   );
 };
