@@ -9,19 +9,22 @@ class AppError extends Error {
 
 class ServerError extends AppError {
     constructor(message = 'Internal Server Error') {
-        super(message, 500); 
+        super(message, 500);
+    }
+}
+class AuthenticationError extends AppError {
+    constructor(message, statusCode = 401) {
+        super(message, statusCode);
     }
 }
 
 class ValidationError extends Error {
     constructor(message) {
-      super(message);
-      this.name = 'ValidationError';
-      this.statusCode = 400;
+        super(message);
+        this.name = 'ValidationError';
+        this.statusCode = 400;
     }
-  }
-
-
+}
 
 class NotFoundError extends AppError {
     constructor(message = 'Resource not found') {
@@ -55,4 +58,5 @@ module.exports = {
     UnauthorizedError,
     ForbiddenError,
     ConflictError,
+    AuthenticationError
 };

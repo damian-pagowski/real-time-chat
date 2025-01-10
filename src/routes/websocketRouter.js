@@ -1,5 +1,6 @@
 const { handleWebSocketConnection } = require('../handlers/webSocketHandler');
 const { ServerError } = require('../utils/errors');
+const authenticationMiddleware = require('../middleware/authentication');
 
 module.exports = async (fastify) => {
     const users = new Map();
@@ -15,7 +16,7 @@ module.exports = async (fastify) => {
         );
     });
 
-    fastify.get('/users/active', async (req, reply) => {
+    fastify.get('/users/active', { preHandler: authenticationMiddleware }, async (req, reply) => {
         try {
             const activeUsers = Array.from(users.keys());
             reply.send(activeUsers);
