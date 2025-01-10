@@ -1,45 +1,52 @@
 const { getMessagesForGroup, getMessagesBetweenUsers, getConversationsForUser } = require('../db/messages');
+const { ValidationError, ServerError } = require('../utils/errors'); 
 
 module.exports = async (fastify) => {
   fastify.get('/messages/direct', async (req, reply) => {
     const { user1, user2 } = req.query;
-
     if (!user1 || !user2) {
-      reply.status(400).send({ error: 'Both user1 and user2 must be specified' });
-      return;
+      throw new ValidationError('Both user1 and user2 must be specified');
     }
-
-    const messages = getMessagesBetweenUsers(user1, user2);
-    reply.send(messages);
+    try {
+      const messages = getMessagesBetweenUsers(user1, user2);
+      reply.send(messages);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ServerError('Failed to fetch direct messages');
+    }
   });
 
   fastify.get('/messages/group/:groupId', async (req, reply) => {
     const { groupId } = req.params;
-
     if (!groupId) {
-      reply.status(400).send({ error: 'Group ID must be specified' });
-      return;
+      throw new ValidationError('Group ID must be specified');
     }
-
-    const messages = getMessagesForGroup(groupId);
-    reply.send(messages);
+    try {
+      const messages = getMessagesForGroup(groupId);
+      reply.send(messages);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error; 
+      }
+      throw new ServerError('Failed to fetch group messages');
+    }
   });
 
   fastify.get('/messages/chats', async (req, reply) => {
-
     const { user } = req.query;
-
     if (!user) {
-      reply.status(400).send({ error: 'The user query parameter is required.' });
-      return;
+      throw new ValidationError('The user query parameter is required');
     }
-
     try {
       const conversations = getConversationsForUser(user);
       reply.send(conversations);
     } catch (error) {
-      console.error('Error fetching conversations:', error);
-      reply.status(500).send({ error: 'Internal Server Error' });
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ServerError('Failed to fetch conversations');
     }
   });
 };

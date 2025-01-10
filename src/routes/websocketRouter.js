@@ -1,6 +1,7 @@
-const { handleWebSocketConnection } = require('../handlers/webSocketHandler')
-module.exports = async (fastify) => {
+const { handleWebSocketConnection } = require('../handlers/webSocketHandler');
+const { ServerError } = require('../utils/errors');
 
+module.exports = async (fastify) => {
     const users = new Map();
     const groups = new Map();
 
@@ -19,9 +20,7 @@ module.exports = async (fastify) => {
             const activeUsers = Array.from(users.keys());
             reply.send(activeUsers);
         } catch (error) {
-            console.error('Error fetching active users:', error);
-            reply.status(500).send({ error: 'Internal Server Error' });
+            throw new ServerError('Failed to fetch active users');
         }
     });
-
 };
