@@ -1,6 +1,6 @@
 const { handleWebSocketConnection } = require('../handlers/webSocketHandler');
 const { ServerError } = require('../utils/errors');
-const authenticationMiddleware = require('../middleware/authentication');
+const authenticationMiddleware = require('../middleware/authenticationMiddleware');
 
 module.exports = async (fastify) => {
     const users = new Map();
