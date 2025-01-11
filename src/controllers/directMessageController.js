@@ -5,26 +5,19 @@ const {
     markMessageAsRead,
     getSenderForMessage,
 } = require('../repositories/messageRepository');
+const { directMessageSchema, readReceiptSchema } = require('../schemas/webSocketSchemas');
+const validateWebSocketMessage = require('../middleware/webSocketMessageValidationMiddleware');
 
 const handleDirectMessage = async (message, username, socket, users) => {
     try {
-        const { recipient, text } = JSON.parse(message);
-
-        if (!recipient || typeof recipient !== 'string') {
-            throw new ValidationError('Direct message must include a valid "recipient" field');
-        }
-        if (!text || typeof text !== 'string') {
-            throw new ValidationError('Direct message must include a valid "text" field');
-        }
-
+        const msg = JSON.parse(message);
+        const { recipient, text } = validateWebSocketMessage(directMessageSchema)(msg);
         const recipientSocket = users.get(recipient);
         if (!recipientSocket) {
             sendMessage(socket, { error: `User ${recipient} is not connected` });
             return;
         }
-
         const savedMessage = await addMessage(username, recipient, text);
-
         const timestamp = Date.now();
         sendMessage(recipientSocket, {
             sender: username,
@@ -45,14 +38,9 @@ const handleDirectMessage = async (message, username, socket, users) => {
 
 const handleReadReceipt = async (message, username, socket, users) => {
     try {
-        const { messageId } = JSON.parse(message);
-
-        if (!messageId || typeof messageId !== 'number') {
-            throw new ValidationError('Read receipt must include a valid "messageId" field');
-        }
-
+        const msg = JSON.parse(message);
+        const { messageId } = validateWebSocketMessage(readReceiptSchema)(msg);
         await markMessageAsRead(messageId);
-
         const sender = await getSenderForMessage(messageId);
         const senderSocket = users.get(sender.username);
         if (senderSocket) {
