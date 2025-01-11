@@ -13,42 +13,62 @@ const findGroupByName = async (name) => {
   });
 };
 
-const addMemberToGroup = async (groupId, userId) => {
+const addMemberToGroup = async (groupId, username) => {
+
+  const user = await prisma.user.findUnique({
+    where: { username },
+  });
+
+  if (!user) {
+    throw new Error(`User "${username}" does not exist`);
+  }
+
   return prisma.group.update({
     where: { id: groupId },
     data: {
       members: {
-        connect: { id: userId },
+        connect: { id: user.id },
       },
     },
   });
 };
 
-const removeMemberFromGroup = async (groupId, userId) => {
+const removeMemberFromGroup = async (groupId, username) => {
+  const user = await prisma.user.findUnique({
+    where: { username },
+  });
+
+  if (!user) {
+    throw new Error(`User "${username}" does not exist`);
+  }
+
   return prisma.group.update({
     where: { id: groupId },
     data: {
       members: {
-        disconnect: { id: userId },
+        disconnect: { id: user.id },
       },
     },
   });
 };
 
-const getGroupMembers = async (groupId) => {
+const getGroupMembers = async (groupName) => {
   const group = await prisma.group.findUnique({
-    where: { id: groupId },
+    where: { name: groupName },
     include: { members: true },
   });
   return group?.members || [];
 };
 
-const getUserGroups = async (userId) => {
+const getUserGroups = async (username) => {
   return prisma.group.findMany({
     where: {
       members: {
-        some: { id: userId },
+        some: { username },
       },
+    },
+    select: {
+      name: true,
     },
   });
 };

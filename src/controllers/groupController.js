@@ -1,36 +1,27 @@
 const { ValidationError } = require('../utils/errors');
 const { sendMessage } = require('../utils/socketUtils');
 const {
-    createGroup, 
+    createGroup,
     findGroupByName,
     addMemberToGroup,
     removeMemberFromGroup,
     getGroupMembers,
-} = require('../repositories/groupRepository'); 
-
+} = require('../repositories/groupRepository');
 const { addMessage } = require('../repositories/messageRepository');
+
+const { groupMessageSchema, joinGroupSchema, leaveGroupSchema, } = require('../schemas/webSocketSchemas');
+const validateWebSocketMessage = require('../middleware/webSocketMessageValidationMiddleware');
+
 const handleGroupMessage = async (message, username, socket, users, groups) => {
     try {
-        const parsedMessage = JSON.parse(message);
-
-        if (!parsedMessage.group || typeof parsedMessage.group !== 'string') {
-            throw new ValidationError('Group message must include a valid "group" field');
-        }
-        if (!parsedMessage.text || typeof parsedMessage.text !== 'string') {
-            throw new ValidationError('Group message must include a valid "text" field');
-        }
-
-        const { group, text } = parsedMessage;
-
-        const groupData = await findGroupByName(group); 
-        if (!groupData) {
-            throw new ValidationError(`Group "${group}" does not exist`);
-        }
-
+        const msg = JSON.parse(message);
+        const validatedMessage = validateWebSocketMessage(groupMessageSchema)(msg);
+        const { group, text } = validatedMessage;
+        const groupData = await findGroupByName(group);
         await addMessage(username, null, text, groupData.id);
 
         const timestamp = Date.now();
-        const members = await getGroupMembers(groupData.id); 
+        const members = await getGroupMembers(groupData.id);
         members.forEach((member) => {
             const recipientSocket = users.get(member.username);
             if (recipientSocket) {
@@ -54,21 +45,15 @@ const handleGroupMessage = async (message, username, socket, users, groups) => {
 
 const handleJoinGroup = async (message, username, socket, groups) => {
     try {
-        const parsedMessage = JSON.parse(message);
+        const msg = JSON.parse(message);
+        const validatedMessage = validateWebSocketMessage(joinGroupSchema)(msg);
+        const { group } = validatedMessage;
 
-        if (!parsedMessage.group || typeof parsedMessage.group !== 'string') {
-            throw new ValidationError('Join group message must include a valid "group" field');
-        }
-
-        const { group } = parsedMessage;
-
-        let groupData = await findGroupByName(group); 
+        let groupData = await findGroupByName(group);
         if (!groupData) {
-            groupData = await createGroup(group); 
+            groupData = await createGroup(group);
         }
-
-        await addMemberToGroup(groupData.id, username); 
-
+        await addMemberToGroup(groupData.id, username);
         sendMessage(socket, { message: `Joined group: ${group}` });
     } catch (err) {
         if (err instanceof ValidationError) {
@@ -82,21 +67,11 @@ const handleJoinGroup = async (message, username, socket, groups) => {
 
 const handleLeaveGroup = async (message, username, socket, groups) => {
     try {
-        const parsedMessage = JSON.parse(message);
-
-        if (!parsedMessage.group || typeof parsedMessage.group !== 'string') {
-            throw new ValidationError('Leave group message must include a valid "group" field');
-        }
-
-        const { group } = parsedMessage;
-
+        const msg = JSON.parse(message);
+        const validatedMessage = validateWebSocketMessage(leaveGroupSchema)(msg);
+        const { group } = validatedMessage;
         const groupData = await findGroupByName(group);
-        if (!groupData) {
-            throw new ValidationError(`Group "${group}" does not exist`);
-        }
-
         await removeMemberFromGroup(groupData.id, username);
-
         sendMessage(socket, { message: `Left group: ${group}` });
     } catch (err) {
         if (err instanceof ValidationError) {
