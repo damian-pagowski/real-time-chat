@@ -1,10 +1,12 @@
+const bcrypt = require('bcrypt');
 const { createUser, findUserByUsername } = require('../repositories/userRepository');
 const { ValidationError, AuthenticationError } = require('../utils/errors');
 
 const registerUser = async (req, reply) => {
     const { username, password } = req.body;
     try {
-        await createUser(username, password);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await createUser(username, hashedPassword);
         reply.send({ message: 'User registered successfully' });
     } catch (error) {
         throw new ValidationError('Failed to register user');
@@ -16,7 +18,7 @@ const loginUser = async (req, reply) => {
     try {
         const user = await findUserByUsername(username);
 
-        if (!user || user.password !== password) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             throw new AuthenticationError('Invalid credentials');
         }
         const token = await reply.jwtSign({ username });
