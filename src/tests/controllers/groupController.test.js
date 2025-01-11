@@ -23,6 +23,14 @@ jest.mock('../../middleware/webSocketMessageValidationMiddleware');
 describe('Group Message Handlers', () => {
     let socket, users, groups;
 
+    beforeAll(() => {
+        jest.spyOn(console, 'error').mockImplementation(() => {}); 
+    });
+    
+    afterAll(() => {
+        console.error.mockRestore(); 
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
         socket = { send: jest.fn() };
@@ -73,6 +81,17 @@ describe('Group Message Handlers', () => {
 
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Invalid group message' });
         });
+
+        test('should handle DB Error', async () => {
+            const message = JSON.stringify({});
+            const username = 'user1';
+            validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
+            findGroupByName.mockRejectedValue(new Error('DB Error'));
+
+            await handleGroupMessage(message, username, socket, users, groups);
+            expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Failed to handle group message', details: 'DB Error' });
+        });
+        
     });
 
     describe('handleJoinGroup', () => {
@@ -108,6 +127,16 @@ describe('Group Message Handlers', () => {
         });
     });
 
+    test('should handle DB Error', async () => {
+        const message = JSON.stringify({});
+        const username = 'user1';
+        validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
+        findGroupByName.mockRejectedValue(new Error('DB Error'));
+
+        await handleJoinGroup(message, username, socket, groups);
+        expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Failed to join group', details: 'DB Error' });
+    });
+
     describe('handleLeaveGroup', () => {
         test('should remove user from group', async () => {
             const message = JSON.stringify({ group: 'group1' });
@@ -137,5 +166,16 @@ describe('Group Message Handlers', () => {
 
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Invalid leave group message' });
         });
+
+        test('should handle DB Error', async () => {
+            const message = JSON.stringify({});
+            const username = 'user1';
+            validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
+            findGroupByName.mockRejectedValue(new Error('DB Error'));
+    
+            await handleLeaveGroup(message, username, socket, groups);
+            expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Failed to leave group', details: 'DB Error' });
+        });
+
     });
 });
