@@ -1,13 +1,12 @@
 const { sendMessage } = require('../utils/socketUtils');
 const { ValidationError  } = require('../utils/errors');
+const { broadcastMessageSchema } = require('../schemas/webSocketSchemas');
+const validateWebSocketMessage = require('../middleware/webSocketMessageValidationMiddleware');
 
 const handleBroadcastMessage = (message, username, socket, users) => {
     try {
-        const parsedMessage = JSON.parse(message);
-        if (!parsedMessage.text || typeof parsedMessage.text !== 'string') {
-            throw new ValidationError('Broadcast message must include a valid "text" field');
-        }
-        const { text } = parsedMessage;
+        const msg = JSON.parse(message);
+        const { text } = validateWebSocketMessage(broadcastMessageSchema)(msg);
         const timestamp = Date.now();
         users.forEach((recipientSocket, user) => {
             if (user !== username) {

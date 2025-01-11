@@ -4,3 +4,4 @@ dist/
 data/chat.db
 prisma/dev.db
 prisma/migrations
+coverage/
