@@ -1,8 +1,13 @@
+const { typingMessageSchema } = require('../schemas/webSocketSchemas');
+const { ValidationError } = require('../utils/errors');
 const { sendMessage } = require('../utils/socketUtils');
+const validateWebSocketMessage = require('../middleware/webSocketMessageValidationMiddleware');
 
 const handleTypingIndicator = (message, username, socket, users, groups) => {
     try {
-        const { status, recipient, group } = JSON.parse(message);
+        const msg =  JSON.parse(message);
+        const validatedMessage = validateWebSocketMessage(typingMessageSchema)(msg);
+        const { status, recipient, group } = validatedMessage;
 
         if (recipient) {
             const recipientSocket = users.get(recipient);
@@ -29,13 +34,16 @@ const handleTypingIndicator = (message, username, socket, users, groups) => {
                     }
                 });
             } else {
-                sendMessage(socket, { error: `Group ${group} does not exist`, message });
+                throw new ValidationError(`Group "${group}" does not exist`);
             }
-        } else {
-            sendMessage(socket, { error: 'Invalid typing indicator format', message });
         }
     } catch (err) {
-        sendMessage(socket, { error: 'Error processing typing indicator', message });
+        if (err instanceof ValidationError) {
+            sendMessage(socket, { error: err.message });
+        } else {
+            console.error('Error processing typing indicator:', err);
+            sendMessage(socket, { error: 'Failed to process typing indicator', details: err.message });
+        }
     }
 };
 
