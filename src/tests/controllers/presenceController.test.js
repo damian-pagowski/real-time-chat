@@ -2,7 +2,12 @@ const {broadcastPresence } = require('../../controllers/presenceController');
 
 describe('broadcastPresence', () => {
     let users;
-
+    const mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        error: jest.fn(),
+    };
     beforeEach(() => {
         users = new Map();
         users.set('user1', { send: jest.fn() });
@@ -17,7 +22,7 @@ describe('broadcastPresence', () => {
         const username = 'testUser';
         const status = 'online';
 
-        broadcastPresence(users, username, status);
+        broadcastPresence(users, username, status, mockLogger);
 
         const expectedMessage = JSON.stringify({
             type: 'presence',
@@ -35,6 +40,6 @@ describe('broadcastPresence', () => {
         const username = 'testUser';
         const status = 'online';
 
-        expect(() => broadcastPresence(users, username, status)).not.toThrow();
+        expect(() => broadcastPresence(users, username, status, mockLogger)).not.toThrow();
     });
 });

@@ -20,15 +20,22 @@ jest.mock('../../repositories/messageRepository');
 jest.mock('../../utils/socketUtils');
 jest.mock('../../middleware/webSocketMessageValidationMiddleware');
 
+const mockLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+};
+
 describe('Group Message Handlers', () => {
     let socket, users, groups;
 
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {}); 
+        jest.spyOn(console, 'error').mockImplementation(() => { });
     });
-    
+
     afterAll(() => {
-        console.error.mockRestore(); 
+        console.error.mockRestore();
     });
 
     beforeEach(() => {
@@ -55,7 +62,7 @@ describe('Group Message Handlers', () => {
             getGroupMembers.mockResolvedValue(members);
             addMessage.mockResolvedValue();
 
-            await handleGroupMessage(message, username, socket, users, groups);
+            await handleGroupMessage(message, username, socket, users, groups, mockLogger);
 
             expect(findGroupByName).toHaveBeenCalledWith('group1');
             expect(addMessage).toHaveBeenCalledWith('user1', null, 'Hello group!', 1);
@@ -77,7 +84,7 @@ describe('Group Message Handlers', () => {
                 throw new ValidationError('Invalid group message');
             }));
 
-            await handleGroupMessage(message, username, socket, users, groups);
+            await handleGroupMessage(message, username, socket, users, groups, mockLogger);
 
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Invalid group message' });
         });
@@ -88,10 +95,10 @@ describe('Group Message Handlers', () => {
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             findGroupByName.mockRejectedValue(new Error('DB Error'));
 
-            await handleGroupMessage(message, username, socket, users, groups);
+            await handleGroupMessage(message, username, socket, users, groups, mockLogger);
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Failed to handle group message', details: 'DB Error' });
         });
-        
+
     });
 
     describe('handleJoinGroup', () => {
@@ -105,7 +112,7 @@ describe('Group Message Handlers', () => {
             createGroup.mockResolvedValue(groupData);
             addMemberToGroup.mockResolvedValue();
 
-            await handleJoinGroup(message, username, socket, groups);
+            await handleJoinGroup(message, username, socket, groups, mockLogger);
 
             expect(findGroupByName).toHaveBeenCalledWith('group1');
             expect(createGroup).toHaveBeenCalledWith('group1');
@@ -121,7 +128,7 @@ describe('Group Message Handlers', () => {
                 throw new ValidationError('Invalid join group message');
             }));
 
-            await handleJoinGroup(message, username, socket, groups);
+            await handleJoinGroup(message, username, socket, groups, mockLogger);
 
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Invalid join group message' });
         });
@@ -133,7 +140,7 @@ describe('Group Message Handlers', () => {
         validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
         findGroupByName.mockRejectedValue(new Error('DB Error'));
 
-        await handleJoinGroup(message, username, socket, groups);
+        await handleJoinGroup(message, username, socket, groups, mockLogger);
         expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Failed to join group', details: 'DB Error' });
     });
 
@@ -147,7 +154,7 @@ describe('Group Message Handlers', () => {
             findGroupByName.mockResolvedValue(groupData);
             removeMemberFromGroup.mockResolvedValue();
 
-            await handleLeaveGroup(message, username, socket, groups);
+            await handleLeaveGroup(message, username, socket, groups, mockLogger);
 
             expect(findGroupByName).toHaveBeenCalledWith('group1');
             expect(removeMemberFromGroup).toHaveBeenCalledWith(groupData.id, username);
@@ -162,7 +169,7 @@ describe('Group Message Handlers', () => {
                 throw new ValidationError('Invalid leave group message');
             }));
 
-            await handleLeaveGroup(message, username, socket, groups);
+            await handleLeaveGroup(message, username, socket, groups, mockLogger);
 
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Invalid leave group message' });
         });
@@ -172,8 +179,8 @@ describe('Group Message Handlers', () => {
             const username = 'user1';
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             findGroupByName.mockRejectedValue(new Error('DB Error'));
-    
-            await handleLeaveGroup(message, username, socket, groups);
+
+            await handleLeaveGroup(message, username, socket, groups, mockLogger);
             expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Failed to leave group', details: 'DB Error' });
         });
 

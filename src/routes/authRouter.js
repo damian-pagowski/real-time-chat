@@ -1,4 +1,4 @@
-const validate = require('../middleware/validationMiddleware'); 
+const validate = require('../middleware/requestValidationMiddleware'); 
 const { registerSchema, loginSchema } = require('../schemas/authSchemas');
 const { registerUser, loginUser } = require('../controllers/authController');
 

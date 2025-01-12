@@ -7,17 +7,23 @@ const validateWebSocketMessage = require('../../middleware/webSocketMessageValid
 jest.mock('../../utils/socketUtils');
 jest.mock('../../middleware/webSocketMessageValidationMiddleware');
 
+const mockLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+};
 describe('handleTypingIndicator', () => {
     let socket, users, groups, username;
 
     beforeAll(() => {
-        jest.spyOn(console, 'error').mockImplementation(() => {}); 
+        jest.spyOn(console, 'error').mockImplementation(() => { });
     });
-    
+
     afterAll(() => {
-        console.error.mockRestore(); 
+        console.error.mockRestore();
     });
-    
+
     beforeEach(() => {
         jest.clearAllMocks();
         socket = { send: jest.fn() };
@@ -40,7 +46,7 @@ describe('handleTypingIndicator', () => {
         const recipientSocket = { send: jest.fn() };
         users.set('user2', recipientSocket);
 
-        handleTypingIndicator(message, username, socket, users, groups);
+        handleTypingIndicator(message, username, socket, users, groups, mockLogger);
 
         expect(validateWebSocketMessage).toHaveBeenCalledWith(typingMessageSchema);
         expect(sendMessage).toHaveBeenCalledWith(recipientSocket, {
@@ -68,7 +74,7 @@ describe('handleTypingIndicator', () => {
         users.set('user2', recipientSocket1);
         users.set('user3', recipientSocket2);
 
-        handleTypingIndicator(message, username, socket, users, groups);
+        handleTypingIndicator(message, username, socket, users, groups, mockLogger);
 
         expect(validateWebSocketMessage).toHaveBeenCalledWith(typingMessageSchema);
         const expectedMessage = {
@@ -93,7 +99,7 @@ describe('handleTypingIndicator', () => {
             group: 'invalidGroup',
         }));
 
-        handleTypingIndicator(message, username, socket, users, groups);
+        handleTypingIndicator(message, username, socket, users, groups, mockLogger);
 
         expect(sendMessage).toHaveBeenCalledWith(socket, {
             error: 'Group "invalidGroup" does not exist',
@@ -103,7 +109,7 @@ describe('handleTypingIndicator', () => {
     test('should handle invalid message format with ValidationError', () => {
         const message = 'invalid JSON';
 
-        handleTypingIndicator(message, username, socket, users, groups);
+        handleTypingIndicator(message, username, socket, users, groups, mockLogger);
 
         expect(sendMessage).toHaveBeenCalledWith(socket, {
             error: 'Failed to process typing indicator',
@@ -121,7 +127,7 @@ describe('handleTypingIndicator', () => {
             throw new Error('Unexpected error');
         });
 
-        handleTypingIndicator(message, username, socket, users, groups);
+        handleTypingIndicator(message, username, socket, users, groups, mockLogger);
 
         expect(sendMessage).toHaveBeenCalledWith(socket, {
             error: 'Failed to process typing indicator',

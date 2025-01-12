@@ -17,6 +17,12 @@ describe('handleBroadcastMessage', () => {
         ['user2', { send: jest.fn() }],
         ['user3', { send: jest.fn() }],
     ]);
+    const mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        error: jest.fn(),
+    };
 
     beforeAll(() => {
         jest.spyOn(console, 'error').mockImplementation(() => {}); 
@@ -33,9 +39,9 @@ describe('handleBroadcastMessage', () => {
     test('should broadcast message to all users except the sender', () => {
         const message = JSON.stringify({ text: 'Hello World' });
         const username = 'user1';
-        validateWebSocketMessage.mockImplementation(() => (msg) => msg); // Mock successful validation
+        validateWebSocketMessage.mockImplementation(() => (msg) => msg); 
 
-        handleBroadcastMessage(message, username, socket, users);
+        handleBroadcastMessage(message, username, socket, users, mockLogger);
 
         expect(validateWebSocketMessage).toHaveBeenCalledWith(broadcastMessageSchema);
         expect(sendMessage).toHaveBeenCalledTimes(3); // 2 recipients + sender confirmation
@@ -45,17 +51,17 @@ describe('handleBroadcastMessage', () => {
     });
 
     test('should send ValidationError if message validation fails', () => {
-        const message = JSON.stringify({}); // Invalid message
+        const message = JSON.stringify({}); 
         const username = 'user1';
         validateWebSocketMessage.mockImplementation(() => {
             throw new ValidationError('Invalid message format');
         });
 
-        handleBroadcastMessage(message, username, socket, users);
+        handleBroadcastMessage(message, username, socket, users, mockLogger);
 
         expect(validateWebSocketMessage).toHaveBeenCalledWith(broadcastMessageSchema);
         expect(sendMessage).toHaveBeenCalledWith(socket, { error: 'Invalid message format' });
-        expect(sendMessage).toHaveBeenCalledTimes(1); // Only sender gets error
+        expect(sendMessage).toHaveBeenCalledTimes(1);
     });
 
     test('should handle unexpected errors gracefully', () => {
@@ -65,7 +71,7 @@ describe('handleBroadcastMessage', () => {
             throw new Error('Unexpected error');
         });
 
-        handleBroadcastMessage(message, username, socket, users);
+        handleBroadcastMessage(message, username, socket, users, mockLogger);
 
         expect(sendMessage).toHaveBeenCalledWith(socket, {
             error: 'Failed to broadcast message',

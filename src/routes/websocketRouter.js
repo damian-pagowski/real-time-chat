@@ -6,22 +6,36 @@ module.exports = async (fastify) => {
     const users = new Map();
     const groups = new Map();
 
-    fastify.get('/ws', { websocket: true }, (socket, req) => {
-        handleWebSocketConnection(
-            socket,
-            req,
-            users,
-            groups,
-            fastify.jwt.verify.bind(fastify.jwt)
-        );
+    fastify.get('/ws', { websocket: true }, async (socket, req) => {
+        try {
+            await authenticationMiddleware(req);
+            const username = req.user;
+            fastify.log.info(`WebSocket connection established for user: ${username} from IP: ${req.ip}`);
+
+            handleWebSocketConnection(
+                socket,
+                username,
+                users,
+                groups,
+                fastify.log
+            );
+        } catch (error) {
+            fastify.log.error({ error }, 'WebSocket authentication failed');
+            connection.socket.close(4001, 'Unauthorized');
+        }
     });
 
     fastify.get('/users/active', { preHandler: authenticationMiddleware }, async (req, reply) => {
         try {
             const activeUsers = Array.from(users.keys());
+            fastify.log.info(`Active users requested by: ${req.user}, count: ${activeUsers.length}`);
             reply.send(activeUsers);
         } catch (error) {
+            fastify.log.error({ error }, 'Failed to fetch active users');
             throw new ServerError('Failed to fetch active users');
         }
     });
+    setInterval(() => {
+        fastify.log.info(`Current active users: ${users.size}, Groups: ${groups.size}`);
+    }, 60000);
 };

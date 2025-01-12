@@ -16,6 +16,14 @@ jest.mock('../../utils/socketUtils');
 jest.mock('../../repositories/messageRepository');
 jest.mock('../../middleware/webSocketMessageValidationMiddleware');
 
+
+const mockLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+};
+
 describe('Message Handlers', () => {
     let socket, users;
 
@@ -46,7 +54,7 @@ describe('Message Handlers', () => {
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             addMessage.mockResolvedValue(savedMessage);
 
-            await handleDirectMessage(message, username, socket, users);
+            await handleDirectMessage(message, username, socket, users, mockLogger);
 
             expect(addMessage).toHaveBeenCalledWith(username, 'recipientUser', 'Hello!');
             expect(sendMessage).toHaveBeenCalledWith(users.get('recipientUser'), {
@@ -67,7 +75,7 @@ describe('Message Handlers', () => {
 
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
 
-            await handleDirectMessage(message, username, socket, users);
+            await handleDirectMessage(message, username, socket, users, mockLogger);
 
             expect(sendMessage).toHaveBeenCalledWith(socket, {
                 error: 'User disconnectedUser is not connected',
@@ -82,7 +90,7 @@ describe('Message Handlers', () => {
                 throw new ValidationError('Direct message must include a valid "text" field');
             }));
 
-            await handleDirectMessage(message, username, socket, users);
+            await handleDirectMessage(message, username, socket, users, mockLogger);
 
             expect(sendMessage).toHaveBeenCalledWith(socket, {
                 error: 'Direct message must include a valid "text" field',
@@ -99,7 +107,7 @@ describe('Message Handlers', () => {
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             addMessage.mockRejectedValue(new Error('Database Error'));
 
-            await expect(handleDirectMessage(message, username, socket, users)).rejects.toThrow(ServerError);
+            await expect(handleDirectMessage(message, username, socket, users, mockLogger)).rejects.toThrow(ServerError);
 
             expect(sendMessage).not.toHaveBeenCalledWith(users.get('recipientUser'), expect.any(Object));
         });
@@ -115,7 +123,7 @@ describe('Message Handlers', () => {
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             getSenderForMessage.mockResolvedValue(senderUser);
 
-            await handleReadReceipt(message, username, socket, users);
+            await handleReadReceipt(message, username, socket, users, mockLogger);
 
             expect(markMessageAsRead).toHaveBeenCalledWith(1);
             expect(sendMessage).toHaveBeenCalledWith(users.get('senderUser'), {
@@ -132,7 +140,7 @@ describe('Message Handlers', () => {
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             getSenderForMessage.mockResolvedValue({ username: 'disconnectedUser' });
 
-            await handleReadReceipt(message, username, socket, users);
+            await handleReadReceipt(message, username, socket, users, mockLogger);
 
             expect(markMessageAsRead).toHaveBeenCalledWith(1);
             expect(sendMessage).not.toHaveBeenCalledWith(users.get('disconnectedUser'), expect.any(Object));
@@ -146,7 +154,7 @@ describe('Message Handlers', () => {
                 throw new ValidationError('Read receipt must include a valid "messageId" field');
             }));
 
-            await handleReadReceipt(message, username, socket, users);
+            await handleReadReceipt(message, username, socket, users, mockLogger);
 
             expect(sendMessage).toHaveBeenCalledWith(socket, {
                 error: 'Read receipt must include a valid "messageId" field',
@@ -160,7 +168,7 @@ describe('Message Handlers', () => {
             validateWebSocketMessage.mockImplementation(() => jest.fn(() => JSON.parse(message)));
             getSenderForMessage.mockRejectedValue(new Error('Database Error'));
 
-            await expect(handleReadReceipt(message, username, socket, users)).rejects.toThrow(ServerError);
+            await expect(handleReadReceipt(message, username, socket, users, mockLogger)).rejects.toThrow(ServerError);
 
             expect(sendMessage).not.toHaveBeenCalledWith(users.get('senderUser'), expect.any(Object));
         });

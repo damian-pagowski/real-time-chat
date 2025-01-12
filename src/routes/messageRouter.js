@@ -4,7 +4,7 @@ const {
   getUserConversationsNames 
 } = require('../controllers/messageController');
 const authenticationMiddleware = require('../middleware/authenticationMiddleware');
-const validate = require('../middleware/ValidationMiddleware');
+const validate = require('../middleware/requestValidationMiddleware');
 const { directMessageSchema, groupMessageSchema, chatsSchema } = require('../schemas/messageSchemas');
 
 module.exports = async (fastify) => {

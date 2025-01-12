@@ -1,10 +1,18 @@
 const bcrypt = require('bcrypt');
 const { loginUser, registerUser } = require('../../controllers/authController');
 const { createUser, findUserByUsername } = require('../../repositories/userRepository');
-const { ValidationError , AuthenticationError} = require('../../utils/errors');
+const { ValidationError, AuthenticationError } = require('../../utils/errors');
 
 jest.mock('bcrypt');
 jest.mock('../../repositories/userRepository');
+
+
+const mockLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+};
 
 describe('registerUser', () => {
     const reply = { send: jest.fn() };
@@ -14,7 +22,10 @@ describe('registerUser', () => {
     });
 
     test('should hash the password and create a user', async () => {
-        const req = { body: { username: 'testuser', password: 'testpassword' } };
+        const req = {
+            body: { username: 'testuser', password: 'testpassword' },
+            log: mockLogger
+        };
         bcrypt.hash.mockResolvedValue('hashedPassword');
         createUser.mockResolvedValue();
 
@@ -26,7 +37,9 @@ describe('registerUser', () => {
     });
 
     test('should throw ValidationError if createUser fails', async () => {
-        const req = { body: { username: "testuser", password: "testpassword" } };
+        const req = {
+            body: { username: "testuser", password: "testpassword" }, log: mockLogger
+        };
         bcrypt.hash.mockResolvedValue('hashedPassword');
         createUser.mockRejectedValue(new Error('DB Error'));
         await expect(registerUser(req, reply)).rejects.toThrow(ValidationError);
@@ -44,7 +57,9 @@ describe('loginUser', () => {
     });
 
     test('should return a token for valid credentials', async () => {
-        const req = { body: { username: 'testuser', password: 'testpassword' } };
+        const req = {
+            body: { username: 'testuser', password: 'testpassword' }, log: mockLogger
+        };
         findUserByUsername.mockResolvedValue({ username: 'testuser', password: 'hashedpassword' });
         bcrypt.compare.mockResolvedValue(true);
         reply.jwtSign.mockResolvedValue("faketoken");
@@ -53,25 +68,27 @@ describe('loginUser', () => {
 
         expect(findUserByUsername).toHaveBeenCalledWith("testuser");
         expect(bcrypt.compare).toHaveBeenCalledWith("testpassword", "hashedpassword");
-        expect(reply.jwtSign).toHaveBeenCalledWith({"username": "testuser"});
-        expect(reply.send).toHaveBeenCalledWith({ "token":  "faketoken" });
+        expect(reply.jwtSign).toHaveBeenCalledWith({ "username": "testuser" });
+        expect(reply.send).toHaveBeenCalledWith({ "token": "faketoken" });
     });
 
     test('should throw ValidationError if findUserByUsername returns no user', async () => {
-        const req = { body: { username: "testuser", password: "testpassword" } };
+        const req = {
+            body: { username: "testuser", password: "testpassword" }, log: mockLogger
+        };
         findUserByUsername.mockResolvedValue(null);
         await expect(loginUser(req, reply)).rejects.toThrow(AuthenticationError);
     });
 
     test('should throw AuthenticationError if password is invalid', async () => {
-        const req = { body: { username: "testuser", password: "invalidPassword" } };
+        const req = { body: { username: "testuser", password: "invalidPassword" }, log: mockLogger };
         findUserByUsername.mockResolvedValue({ username: 'testuser', password: 'hashedpassword' });
         bcrypt.compare.mockResolvedValue(false);
         await expect(loginUser(req, reply)).rejects.toThrow(AuthenticationError);
     });
 
     test('should throw ValidationError if token fails signing', async () => {
-        const req = { body: { username: "testuser", password: "testpassword" } };
+        const req = { body: { username: "testuser", password: "testpassword" }, log: mockLogger };
         findUserByUsername.mockResolvedValue({ username: 'testuser', password: 'hashedpassword' });
         bcrypt.compare.mockResolvedValue(true);
         reply.jwtSign.mockRejectedValue(new Error('JWT Error'));
