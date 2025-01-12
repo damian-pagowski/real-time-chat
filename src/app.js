@@ -5,16 +5,19 @@ const helmet = require('@fastify/helmet');
 const websocket = require('@fastify/websocket');
 const jwt = require('@fastify/jwt');
 const errorHandler = require('./middleware/errorHandlerMiddleware');
+
 fastify.register(helmet);
 fastify.register(fastifyCors, { origin: '*' });
 fastify.register(websocket);
-fastify.register(jwt, { secret: 'your-secure-secret' });
+
+const jwtSecret = process.env.JWT_SECRET || 'your-secure-secret'; 
+
+fastify.register(jwt, { secret: jwtSecret });
 
 fastify.register(require('./routes/authRouter'));
 fastify.register(require('./routes/messageRouter'));
-
-
 fastify.register(require('./routes/websocketRouter'));
+
 fastify.setErrorHandler(errorHandler);
 
 module.exports = fastify;
