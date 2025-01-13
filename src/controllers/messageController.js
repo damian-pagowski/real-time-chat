@@ -29,7 +29,7 @@ const getGroupMessages = async (req, reply) => {
     req.log.info({ groupId: groupData.id, messageCount: messages.length }, 'Group messages fetched successfully');
     reply.send(messages);
   } catch (error) {
-    req.log.error({ error: error.message, groupId: groupData.id }, 'Failed to fetch group messages');
+    req.log.error({ error: error.message, groupId }, 'Failed to fetch group messages');
     throw new ServerError('Failed to fetch group messages');
   }
 };

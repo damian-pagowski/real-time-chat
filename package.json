@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test:unit": "jest --testPathPattern=src/tests/unit",
     "dev": "nodemon src/server.js",
     "start": "node src/index.js"
   },
