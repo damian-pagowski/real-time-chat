@@ -1,6 +1,7 @@
 const { handleWebSocketConnection } = require('../handlers/webSocketHandler');
 const { ServerError } = require('../utils/errors');
 const authenticationMiddleware = require('../middleware/authenticationMiddleware');
+const wsAuthMiddleware = require('../middleware/wsAuthMiddleware');
 
 module.exports = async (fastify) => {
     const users = new Map();
@@ -8,20 +9,21 @@ module.exports = async (fastify) => {
 
     fastify.get('/ws', { websocket: true }, async (socket, req) => {
         try {
-            await authenticationMiddleware(req);
-            const username = req.user;
-            fastify.log.info(`WebSocket connection established for user: ${username} from IP: ${req.ip}`);
+            await wsAuthMiddleware(req, socket, () => {
+                const username = req.user.username;
+                fastify.log.info(`WebSocket connection established for user: ${username} from IP: ${req.ip}`);
 
-            handleWebSocketConnection(
-                socket,
-                username,
-                users,
-                groups,
-                fastify.log
-            );
+                handleWebSocketConnection(
+                    socket,
+                    username,
+                    users,
+                    groups,
+                    fastify.log
+                );
+            });
         } catch (error) {
             fastify.log.error({ error }, 'WebSocket authentication failed');
-            connection.socket.close(4001, 'Unauthorized');
+            socket.close(4001, 'Unauthorized');
         }
     });
 
