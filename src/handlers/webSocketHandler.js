@@ -50,7 +50,7 @@ const handleWebSocketConnection = (socket, username, users, groups, logger) => {
         users.delete(username);
         broadcastPresence(users, username, 'offline', logger);
         groups.forEach((members) => members.delete(username));
-        fastify.log.info(`WebSocket disconnected for user: ${username}`);
+        logger.info(`WebSocket disconnected for user: ${username}`);
     });
 };
 
