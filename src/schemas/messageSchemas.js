@@ -2,8 +2,7 @@ const Joi = require('joi');
 
 const directMessageSchema = {
   query: Joi.object({
-    user1: Joi.string().required(),
-    user2: Joi.string().required(),
+    user: Joi.string().required(),
   }),
   body: Joi.object({}),
   params: Joi.object({}), 
@@ -18,9 +17,7 @@ const groupMessageSchema = {
 };
 
 const chatsSchema = {
-  query: Joi.object({
-    user: Joi.string().required(),
-  }),
+  query: Joi.object({}),
   body: Joi.object({}),
   params: Joi.object({}), 
 };

@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const { createUser, findUserByUsername } = require('../repositories/userRepository');
-const { ValidationError, AuthenticationError } = require('../utils/errors');
+const { ServerError, AuthenticationError } = require('../utils/errors');
 
 const registerUser = async (req, reply) => {
     const { username, password } = req.body;
@@ -14,7 +14,7 @@ const registerUser = async (req, reply) => {
         reply.send({ message: 'User registered successfully' });
     } catch (error) {
         logger.error({ username, error: error.message }, 'Failed to register user');
-        throw new ValidationError('Failed to register user');
+        throw new ServerError('Failed to register user');
     }
 };
 
@@ -42,7 +42,7 @@ const loginUser = async (req, reply) => {
             throw error;
         }
         logger.error({ username, error: error.message }, 'Failed to log in user');
-        throw new ValidationError('Failed to log in');
+        throw new ServerError('Failed to log in');
     }
 };
 

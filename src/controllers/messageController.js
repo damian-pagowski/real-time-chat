@@ -1,39 +1,41 @@
 const {
   getMessagesBetweenUsers,
   getMessagesForGroup,
-  getConversationUsernames
+  getConversationUsernames,
 } = require('../repositories/messageRepository');
+const {findGroupByName} = require('../repositories/groupRepository');
 const { ServerError } = require('../utils/errors');
 
 const getDirectMessages = async (req, reply) => {
-  const { user1, user2 } = req.query;
-  req.log.info({ user1, user2 }, 'Fetching direct messages');
+  const { user } = req.query;
+  const authenticatedUser = req.user;
+  req.log.info({ user1: authenticatedUser, user2: user }, 'Fetching direct messages');
   try {
-    const messages = await getMessagesBetweenUsers(user1, user2);
-    req.log.info({ user1, user2, messageCount: messages.length }, 'Direct messages fetched successfully');
+    const messages = await getMessagesBetweenUsers(authenticatedUser, user);
+    req.log.info({ user1: authenticatedUser, user2: user, messageCount: messages.length }, 'Direct messages fetched successfully');
     reply.send(messages);
   } catch (error) {
-    req.log.error({ error: error.message, user1, user2 }, 'Failed to fetch direct messages');
+    req.log.error({ error: error.message, user1: authenticatedUser, user2: user }, 'Failed to fetch direct messages');
     throw new ServerError('Failed to fetch direct messages');
   }
 };
 
 const getGroupMessages = async (req, reply) => {
   const { groupId } = req.params;
-  const parsedGroupId = parseInt(groupId);
-  req.log.info({ groupId: parsedGroupId }, 'Fetching group messages');
+  req.log.info({ group: groupId }, 'Fetching group messages');
   try {
-    const messages = await getMessagesForGroup(parsedGroupId);
-    req.log.info({ groupId: parsedGroupId, messageCount: messages.length }, 'Group messages fetched successfully');
+    const groupData = await findGroupByName(groupId);
+    const messages = await getMessagesForGroup(groupData.id);
+    req.log.info({ groupId: groupData.id, messageCount: messages.length }, 'Group messages fetched successfully');
     reply.send(messages);
   } catch (error) {
-    req.log.error({ error: error.message, groupId: parsedGroupId }, 'Failed to fetch group messages');
+    req.log.error({ error: error.message, groupId: groupData.id }, 'Failed to fetch group messages');
     throw new ServerError('Failed to fetch group messages');
   }
 };
 
 const getUserConversationsNames = async (req, reply) => {
-  const { user } = req.query;
+  const user = req.user;
   req.log.info({ user }, 'Fetching user conversations');
   try {
     const conversations = await getConversationUsernames(user);

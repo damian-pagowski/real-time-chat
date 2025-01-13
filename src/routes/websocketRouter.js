@@ -27,7 +27,7 @@ module.exports = async (fastify) => {
         }
     });
 
-    fastify.get('/users/active', { preHandler: authenticationMiddleware }, async (req, reply) => {
+    fastify.get('/ws/active-users', { preHandler: authenticationMiddleware }, async (req, reply) => {
         try {
             const activeUsers = Array.from(users.keys());
             fastify.log.info(`Active users requested by: ${req.user}, count: ${activeUsers.length}`);

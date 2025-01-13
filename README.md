@@ -71,6 +71,36 @@ Logging is implemented using Fastify's built-in logger. Logs include:
 - Error details for debugging
 - User activity (e.g., connection and disconnection events)
 
+### Useful Commands
+
+0. Initialize the Database for the First Time
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+1. Reset the Database:
+   ```bash
+   npx prisma migrate reset
+   ```
+2. Deploy Migrations
+   ```bash
+   npx prisma migrate deploy
+   ```
+3. Generate Prisma Client
+   ```bash
+   npx prisma generate
+   ```
+4. Inspect Database with Prisma Studio
+   ```bash
+   npx prisma studio
+   ```
+5. Inspect Database with Prisma Studio
+   ```bash
+   npx prisma generate
+   ```
+
+
+
 ## GitHub Actions
 A CI pipeline is configured to:
 - Run unit tests on every push or merge to the `master` branch.

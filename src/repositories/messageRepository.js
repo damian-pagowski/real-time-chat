@@ -9,13 +9,18 @@ const addMessage = async (senderUsername, recipientUsername, text, groupId = nul
                 username: senderUsername,
             },
         },
-        recipient: {
+    };
+
+    // Include recipient only for direct messages
+    if (recipientUsername) {
+        data.recipient = {
             connect: {
                 username: recipientUsername,
             },
-        },
-    };
+        };
+    }
 
+    // Include group only for group messages
     if (groupId) {
         data.group = {
             connect: {
@@ -47,6 +52,13 @@ const getMessagesForGroup = async (groupId) => {
     return prisma.message.findMany({
         where: { groupId },
         orderBy: { createdAt: 'desc' },
+        include: {
+            sender: { // Join the sender table
+                select: {
+                    username: true, // Only fetch the username
+                },
+            },
+        },
     });
 };
 

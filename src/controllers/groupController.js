@@ -19,14 +19,15 @@ const handleGroupMessage = async (message, username, socket, users, groups, logg
         const validatedMessage = validateWebSocketMessage(groupMessageSchema)(msg);
         const { group, text } = validatedMessage;
         const groupData = await findGroupByName(group);
-        await addMessage(username, null, text, groupData.id);
+        await addMessage(username, null, text, parseInt(groupData.id));
+                
         logger.info({ username, group, text }, 'Group message saved');
 
         const timestamp = Date.now();
-        const members = await getGroupMembers(groupData.id);
+        const members = await getGroupMembers(groupData.name);
         members.forEach((member) => {
             const recipientSocket = users.get(member.username);
-            if (recipientSocket) {
+            if (recipientSocket && member.username !== username) {
                 sendMessage(recipientSocket, {
                     sender: username,
                     group,

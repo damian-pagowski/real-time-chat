@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const { loginUser, registerUser } = require('../../controllers/authController');
 const { createUser, findUserByUsername } = require('../../repositories/userRepository');
-const { ValidationError, AuthenticationError } = require('../../utils/errors');
+const { ServerError, AuthenticationError } = require('../../utils/errors');
 
 jest.mock('bcrypt');
 jest.mock('../../repositories/userRepository');
@@ -36,13 +36,13 @@ describe('registerUser', () => {
         expect(reply.send).toHaveBeenCalledWith({ "message": "User registered successfully" });
     });
 
-    test('should throw ValidationError if createUser fails', async () => {
+    test('should throw ServerError if createUser fails', async () => {
         const req = {
             body: { username: "testuser", password: "testpassword" }, log: mockLogger
         };
         bcrypt.hash.mockResolvedValue('hashedPassword');
         createUser.mockRejectedValue(new Error('DB Error'));
-        await expect(registerUser(req, reply)).rejects.toThrow(ValidationError);
+        await expect(registerUser(req, reply)).rejects.toThrow(ServerError);
     });
 });
 
@@ -72,7 +72,7 @@ describe('loginUser', () => {
         expect(reply.send).toHaveBeenCalledWith({ "token": "faketoken" });
     });
 
-    test('should throw ValidationError if findUserByUsername returns no user', async () => {
+    test('should throw AuthenticationError if findUserByUsername returns no user', async () => {
         const req = {
             body: { username: "testuser", password: "testpassword" }, log: mockLogger
         };
@@ -87,11 +87,11 @@ describe('loginUser', () => {
         await expect(loginUser(req, reply)).rejects.toThrow(AuthenticationError);
     });
 
-    test('should throw ValidationError if token fails signing', async () => {
+    test('should throw ServerError if token fails signing', async () => {
         const req = { body: { username: "testuser", password: "testpassword" }, log: mockLogger };
         findUserByUsername.mockResolvedValue({ username: 'testuser', password: 'hashedpassword' });
         bcrypt.compare.mockResolvedValue(true);
         reply.jwtSign.mockRejectedValue(new Error('JWT Error'));
-        await expect(loginUser(req, reply)).rejects.toThrow(ValidationError);
+        await expect(loginUser(req, reply)).rejects.toThrow(ServerError);
     });
 });
