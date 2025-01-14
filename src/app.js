@@ -18,6 +18,10 @@ fastify.register(require('./routes/authRouter'));
 fastify.register(require('./routes/messageRouter'));
 fastify.register(require('./routes/websocketRouter'));
 
+fastify.get('/health', async (req, reply) => {
+    return { status: 'ok' };
+});
+
 fastify.setErrorHandler(errorHandler);
 
 module.exports = fastify;

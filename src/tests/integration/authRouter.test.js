@@ -1,8 +1,8 @@
 const fastify = require('../../app');
 const { createUser, findUserByUsername } = require('../../repositories/userRepository');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 jest.mock('../../repositories/userRepository');
-jest.mock('bcrypt');
+jest.mock('bcryptjs');
 
 describe('Auth Router Tests with Mocked Database', () => {
     let mockFastify;

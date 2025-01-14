@@ -8,7 +8,7 @@ describe('WebSocket Message Tests', () => {
     let app;
     let wsClient1;
     let wsClient2;
-    const port = process.env.PORT || 3000;
+    const port = 3002;
     const username1 = testData.testUsers[0].username;
     const username2 = testData.testUsers[1].username;
 

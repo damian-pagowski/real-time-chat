@@ -6,11 +6,16 @@ const testData = require('../fixtures/testData');
 
 describe('Message Router Tests', () => {
     let app;
+    const port = 3003;
+ 
 
     beforeAll(async () => {
         app = fastify;
-        await app.ready();
         await prisma.$connect();
+        // Start Fastify server
+        await app.listen({ port, host: '127.0.0.1' });
+        const addr = app.server.address();
+        console.log(`Test server running at http://127.0.0.1:${addr.port}`);
         await seedTestData();
     });
 
@@ -23,7 +28,7 @@ describe('Message Router Tests', () => {
         const token = generateTestToken(testData.testUsers[0].username);
 
         const response = await supertest(app.server)
-            .get(`/messages/direct?user1=${testData.testUsers[0].username}&user2=${testData.testUsers[1].username}`)
+            .get(`/messages/direct?user=${testData.testUsers[1].username}`)
             .set('Authorization', `Bearer ${token}`);
 
         expect(response.statusCode).toBe(200);
@@ -44,7 +49,7 @@ describe('Message Router Tests', () => {
 
     test('GET /messages/direct should return 401 if unauthorized', async () => {
         const response = await supertest(app.server)
-            .get(`/messages/direct?user1=${testData.testUsers[0].username}&user2=${testData.testUsers[1].username}`)
+            .get(`/messages/direct?user=${testData.testUsers[1].username}`)
         expect(response.statusCode).toBe(401);
         expect(response.body).toHaveProperty('message', 'Invalid token');
     });
@@ -53,7 +58,7 @@ describe('Message Router Tests', () => {
         const token = generateTestToken(testData.testUsers[0].username);
         const group = await prisma.group.findUnique({ where: { name: testData.testGroups[0].name } });
         const response = await supertest(app.server)
-            .get(`/messages/group/${group.id}`)
+            .get(`/messages/group/${group.name}`)
             .set('Authorization', `Bearer ${token}`);
 
         expect(response.statusCode).toBe(200);

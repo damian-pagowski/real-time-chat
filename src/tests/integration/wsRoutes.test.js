@@ -7,7 +7,7 @@ const testData = require('../fixtures/testData');
 
 describe('WebSocket Route Tests', () => {
     let app;
-    const port = process.env.PORT || 3000;
+    const port = 3001;
 
     beforeAll(async () => {
         app = fastify;

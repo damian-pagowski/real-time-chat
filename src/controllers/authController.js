@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { createUser, findUserByUsername } = require('../repositories/userRepository');
 const { ServerError, AuthenticationError } = require('../utils/errors');
 

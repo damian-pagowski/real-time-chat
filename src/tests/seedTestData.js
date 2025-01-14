@@ -1,6 +1,6 @@
 const prisma = require('./prismaTestClient');
 const jwtSecret = process.env.JWT_SECRET || 'your-secure-secret';
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const testData = require('./fixtures/testData');
 

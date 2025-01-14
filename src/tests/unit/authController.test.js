@@ -1,9 +1,9 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { loginUser, registerUser } = require('../../controllers/authController');
 const { createUser, findUserByUsername } = require('../../repositories/userRepository');
 const { ServerError, AuthenticationError } = require('../../utils/errors');
 
-jest.mock('bcrypt');
+jest.mock('bcryptjs');
 jest.mock('../../repositories/userRepository');
 
 
