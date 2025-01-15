@@ -14,7 +14,7 @@ const jwtSecret = process.env.JWT_SECRET || 'your-secure-secret';
 
 fastify.register(jwt, { secret: jwtSecret });
 
-fastify.register(require('./routes/authRouter'));
+fastify.register(require('./routes/userRouter'));
 fastify.register(require('./routes/messageRouter'));
 fastify.register(require('./routes/websocketRouter'));
 

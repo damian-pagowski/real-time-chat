@@ -14,7 +14,12 @@ const authenticationMiddleware = async (req, reply) => {
     }
 
     const decoded = req.server.jwt.verify(token);
-    req.user = decoded.username;
+
+    if (!decoded || !decoded.username || !decoded.role) {
+      throw new AuthenticationError('Invalid token payload');
+    }
+
+    req.user = { username: decoded.username, role: decoded.role };
   } catch (error) {
     if (error.message === 'jwt expired') {
       throw new AuthenticationError('Token expired');

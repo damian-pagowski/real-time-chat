@@ -13,4 +13,10 @@ const findUserByUsername = async (username) => {
   });
 };
 
-module.exports = { createUser, findUserByUsername };
+const deleteUserByUsername = async (username) => {
+  return prisma.user.delete({
+    where: { username },
+  });
+};
+
+module.exports = { createUser, findUserByUsername, deleteUserByUsername };

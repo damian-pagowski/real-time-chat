@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { loginUser, registerUser } = require('../../controllers/authController');
+const { loginUser, registerUser } = require('../../controllers/userController');
 const { createUser, findUserByUsername } = require('../../repositories/userRepository');
 const { ServerError, AuthenticationError } = require('../../utils/errors');
 

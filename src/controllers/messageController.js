@@ -8,7 +8,7 @@ const { ServerError } = require('../utils/errors');
 
 const getDirectMessages = async (req, reply) => {
   const { user } = req.query;
-  const authenticatedUser = req.user;
+  const authenticatedUser = req.user.username;
   req.log.info({ user1: authenticatedUser, user2: user }, 'Fetching direct messages');
   try {
     const messages = await getMessagesBetweenUsers(authenticatedUser, user);
@@ -35,7 +35,7 @@ const getGroupMessages = async (req, reply) => {
 };
 
 const getUserConversationsNames = async (req, reply) => {
-  const user = req.user;
+  const user = req.user.username;
   req.log.info({ user }, 'Fetching user conversations');
   try {
     const conversations = await getConversationUsernames(user);

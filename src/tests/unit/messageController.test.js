@@ -11,7 +11,7 @@ const {
 } = require('../../repositories/messageRepository');
 
 
-const {findGroupByName} = require('../../repositories/groupRepository');
+const { findGroupByName } = require('../../repositories/groupRepository');
 
 const { ServerError } = require('../../utils/errors');
 
@@ -35,7 +35,7 @@ describe('Message Controller', () => {
 
     describe('getDirectMessages', () => {
         test('should fetch messages between two users', async () => {
-            req = { query: {  user: 'user2' }, log: mockLogger, user: 'user1' };
+            req = { user: { username: "user1", role: "user" }, log: mockLogger, query: { user: 'user2' }};
             const mockMessages = [{ id: 1, text: 'Hello' }];
             getMessagesBetweenUsers.mockResolvedValue(mockMessages);
 
@@ -46,7 +46,7 @@ describe('Message Controller', () => {
         });
 
         test('should throw ServerError on failure', async () => {
-            req = { query: {  user: 'user2' }, log: mockLogger, user: 'user1' };
+            req = { user: { username: "user1", role: "user" }, log: mockLogger, query: { user: 'user2' }};
 
             getMessagesBetweenUsers.mockRejectedValue(new Error('Database error'));
 
@@ -59,7 +59,7 @@ describe('Message Controller', () => {
             req = { params: { groupId: 'dev' }, log: mockLogger };
             const mockMessages = [{ id: 1, text: 'Group message' }];
 
-            findGroupByName.mockResolvedValue({id:1, name: 'dev'})
+            findGroupByName.mockResolvedValue({ id: 1, name: 'dev' })
             getMessagesForGroup.mockResolvedValue(mockMessages);
 
             await getGroupMessages(req, reply);
@@ -78,7 +78,7 @@ describe('Message Controller', () => {
 
     describe('getUserConversationsNames', () => {
         test('should fetch conversation usernames for a user', async () => {
-            req = { user: 'user1' , log: mockLogger };
+            req = { user: { username: "user1", role: "user" }, log: mockLogger };
             const mockConversations = ['user2', 'user3'];
             getConversationUsernames.mockResolvedValue(mockConversations);
 
@@ -89,7 +89,8 @@ describe('Message Controller', () => {
         });
 
         test('should throw ServerError on failure', async () => {
-            req = { user: 'user1' , log: mockLogger };
+            req = { user: { username: "user1", role: "user" }, log: mockLogger };
+
             getConversationUsernames.mockRejectedValue(new Error('Database error'));
 
             await expect(getUserConversationsNames(req, reply)).rejects.toThrow(ServerError);

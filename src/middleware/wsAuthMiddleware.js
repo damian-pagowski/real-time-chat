@@ -10,8 +10,12 @@ const wsAuthMiddleware = async (req, socket, next) => {
             throw new AuthenticationError('Token is required for WebSocket authentication');
         }
 
-        const user = await req.server.jwt.verify(token); 
-        req.user = user;
+        const decoded = req.server.jwt.verify(token);
+
+        if (!decoded || !decoded.username || !decoded.role) {
+          throw new AuthenticationError('Invalid token payload');
+        }
+        req.user = { username: decoded.username, role: decoded.role };
         next();
     } catch (error) {
         req.log.error({ error: error.message }, 'WebSocket authentication failed');

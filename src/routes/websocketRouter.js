@@ -30,7 +30,7 @@ module.exports = async (fastify) => {
     fastify.get('/ws/active-users', { preHandler: authenticationMiddleware }, async (req, reply) => {
         try {
             const activeUsers = Array.from(users.keys());
-            fastify.log.info(`Active users requested by: ${req.user}, count: ${activeUsers.length}`);
+            fastify.log.info(`Active users requested by: ${req.user.username}, count: ${activeUsers.length}`);
             reply.send(activeUsers);
         } catch (error) {
             fastify.log.error({ error }, 'Failed to fetch active users');

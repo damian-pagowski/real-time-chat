@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const testData = require('./fixtures/testData');
 
 const generateTestToken = (username) => {
-    return jwt.sign({ username }, jwtSecret, { expiresIn: '1h' });
+    return jwt.sign({ username, role:"user" }, jwtSecret, { expiresIn: '1h' });
 };
 
 const seedTestData = async () => {
