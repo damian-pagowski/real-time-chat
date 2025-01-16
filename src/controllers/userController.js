@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { createUser, findUserByUsername, deleteUserByUsername } = require('../repositories/userRepository');
-const { ServerError, AuthenticationError, ConflictError } = require('../utils/errors');
+const { ServerError, AuthenticationError, ConflictError, NotFoundError } = require('../utils/errors');
 
 const registerUser = async (req, reply) => {
     const { username, password } = req.body;
@@ -19,7 +19,7 @@ const registerUser = async (req, reply) => {
         reply.send({ message: 'User registered successfully' });
     } catch (error) {
         logger.error({ username, error: error.message }, 'Failed to register user');
-        if (error instanceof ConflictError){
+        if (error instanceof ConflictError) {
             throw error
         }
         throw new ServerError('Failed to register user');
@@ -59,11 +59,19 @@ const deleteUser = async (req, reply) => {
     const logger = req.log;
 
     try {
+        const user = await findUserByUsername(username);
+        if (!user) {
+            logger.warn({ username }, 'User not found');
+            throw new NotFoundError(`User ${username} not found`);
+        }
         logger.info({ username }, 'Attempting to delete user');
         await deleteUserByUsername(username);
         logger.info({ username }, 'User deleted successfully');
         reply.send({ message: `User ${username} deleted successfully` });
     } catch (error) {
+        if (error instanceof NotFoundError) {
+            throw error;
+        }
         logger.error({ username, error: error.message }, 'Failed to delete user');
         throw new ServerError('Failed to delete user');
     }

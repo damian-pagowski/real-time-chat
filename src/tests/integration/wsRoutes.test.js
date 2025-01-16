@@ -62,7 +62,6 @@ describe('WebSocket Route Tests', () => {
     test('GET /ws/active-users should return active WebSocket users', async () => {
         const token = generateTestToken(testData.testUsers[0].username);
 
-        // Simulate WebSocket connection
         const wsUrl = `ws://127.0.0.1:${port}/ws?token=${token}`;
 
         const ws = new WebSocket(wsUrl);

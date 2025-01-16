@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 jest.mock('../../repositories/userRepository');
 jest.mock('bcryptjs');
 
-describe('Auth Router Tests with Mocked Database', () => {
+describe('User Router Tests with Mocked Database', () => {
     let mockFastify;
 
     beforeAll(async () => {
