@@ -73,164 +73,158 @@ Logging is implemented using Fastify's built-in logger. Logs include:
 
 ### Useful Commands
 
-0. Initialize the Database for the First Time
+1. Initialize the Database for the First Time
    ```bash
    npx prisma generate
    npx prisma db push
    ```
-1. Reset the Database:
+2. Reset the Database:
    ```bash
    npx prisma migrate reset
    ```
-2. Deploy Migrations
+3. Deploy Migrations
    ```bash
    npx prisma migrate deploy
    ```
-3. Generate Prisma Client
+4. Generate Prisma Client
    ```bash
    npx prisma generate
-   ```
-4. Inspect Database with Prisma Studio
-   ```bash
-   npx prisma studio
    ```
 5. Inspect Database with Prisma Studio
    ```bash
-   npx prisma generate
+   npx prisma studio
    ```
 
 ## Docker
 
-0. Optional - running cleanup tool
+1. Optional - running cleanup tool
    ```bash
    docker system prune -a --volumes
-   ````
+   ```
 
-1. Rebuild and start service
+2. Rebuild and start service
    ```bash
    docker-compose up --build  
-   ````
+   ```
 
 ## WebSocket Messages
 
 The WebSocket API supports various message types for real-time communication. Below is the list of supported message types, their payload formats, and expected responses.
 
-1. Direct Message
-
+### 1. Direct Message
    Payload:
    ```json
    {
-  "type": "direct",
-  "recipient": "client",
-  "text": "test message"
-  }
+     "type": "direct",
+     "recipient": "client",
+     "text": "test message"
+   }
    ```
    Response:
    ```json
    {
-  "type": "direct",
-  "sender": "testuser1",
-  "text": "test message",
-  "timestamp": 1736772049828
+     "type": "direct",
+     "sender": "testuser1",
+     "text": "test message",
+     "timestamp": 1736772049828
    }
    ```
 
-2. Typing Indicator
-
+### 2. Typing Indicator
    Start Typing Payload:
    ```json
    {
-  "type": "typing",
-  "status": "startTyping",
-  "recipient": "client"
+     "type": "typing",
+     "status": "startTyping",
+     "recipient": "client"
    }
    ```
    Stop Typing Payload:
    ```json
-  {
-  "type": "typing",
-  "status": "stopTyping",
-  "recipient": "client"
-  }
+   {
+     "type": "typing",
+     "status": "stopTyping",
+     "recipient": "client"
+   }
    ```
    Response to Recipient:
-  ```json
-  {
-  "type": "typing",
-  "sender": "testuser1",
-  "status": "startTyping"
-  }
+   ```json
+   {
+     "type": "typing",
+     "sender": "testuser1",
+     "status": "startTyping"
+   }
    ```
 
-3. Read Receipt - Acknowledge that a message was read
+### 3. Read Receipt
    Payload:
    ```json
    {
-   "type": "readReceipt",
-   "messageId": 1
+     "type": "readReceipt",
+     "messageId": 1
    }
    ```
    Response to Sender:
    ```json
    {
-   "type": "readReceipt",
-   "messageId": 1,
-   "reader": "testuser2"
+     "type": "readReceipt",
+     "messageId": 1,
+     "reader": "testuser2"
    }
+   ```
 
-4. Group Messages
+### 4. Group Messages
    Join Group:
    ```json
    {
-   "type": "join",
-   "group": "dev"
+     "type": "join",
+     "group": "dev"
    }
    ```
    Send Group Message:
-  ```json
+   ```json
    {
-   "type": "groupMessage",
-   "text": "hello group",
-   "group": "dev"
+     "type": "groupMessage",
+     "text": "hello group",
+     "group": "dev"
    }
    ```
-
    Response to Group Members:
    ```json
    {
-   "type": "groupMessage",
-   "sender": "testuser1",
-   "group": "dev",
-   "text": "hello group",
-   "timestamp": 1736772049828
+     "type": "groupMessage",
+     "sender": "testuser1",
+     "group": "dev",
+     "text": "hello group",
+     "timestamp": 1736772049828
    }
    ```
-   Leave Group
+   Leave Group:
    ```json
    {
-   "type": "leave",
-   "group": "dev"
-   }
-   ```
-5. Broadcast Message
-   Payload:
-   ```json
-   {
-   "type": "broadcast",
-   "text": "meh broadcast message"
+     "type": "leave",
+     "group": "dev"
    }
    ```
 
+### 5. Broadcast Message
+   Payload:
+   ```json
+   {
+     "type": "broadcast",
+     "text": "meh broadcast message"
+   }
+   ```
    Response to All Recipients:
    ```json
    {
-   "type": "broadcast",
-   "sender": "testuser1",
-   "text": "meh broadcast message",
-   "timestamp": 1736772049828
+     "type": "broadcast",
+     "sender": "testuser1",
+     "text": "meh broadcast message",
+     "timestamp": 1736772049828
    }
    ```
- 
+
 ## GitHub Actions
 A CI pipeline is configured to:
 - Run unit tests on every push or merge to the `master` branch.
@@ -240,7 +234,7 @@ Start Prometheus with the following command:
    ```bash
    prometheus --config.file=prometheus.yml
    ```
-Access the Prometheus UI at 
+Access the Prometheus UI at:
    ```bash
    http://localhost:9090
    ```
