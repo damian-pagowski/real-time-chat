@@ -238,11 +238,11 @@ A CI pipeline is configured to:
 ## Prometheus
 Start Prometheus with the following command:
    ```bash
-   ./prometheus --config.file=prometheus.yml
+   prometheus --config.file=prometheus.yml
    ```
 Access the Prometheus UI at 
    ```bash
-   http://localhost:9090.
+   http://localhost:9090
    ```
 
 ## License
