@@ -6,4 +6,7 @@ prisma/*.db
 prisma/migrations
 coverage/
 prometheus.yml
+promtail-config.yaml
 data/
+logs/
+changes.patch

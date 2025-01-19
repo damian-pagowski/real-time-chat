@@ -229,7 +229,7 @@ The WebSocket API supports various message types for real-time communication. Be
 A CI pipeline is configured to:
 - Run unit tests on every push or merge to the `master` branch.
 
-## Prometheus
+## Log Centralization for Analysis
 Start Prometheus with the following command:
    ```bash
    prometheus --config.file=prometheus.yml
@@ -238,6 +238,11 @@ Access the Prometheus UI at:
    ```bash
    http://localhost:9090
    ```
+Run Promtail:
+   ```bash
+   promtail -config.file=promtail-config.yaml
+   ```
+
 
 ## License
 This project is under a custom license. Usage of this project or any of its parts is permitted only with written permission from the author: Damian Pągowski. Unauthorized use, distribution, or modification is strictly prohibited.

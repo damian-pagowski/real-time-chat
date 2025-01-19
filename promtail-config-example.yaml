@@ -1,0 +1,18 @@
+server:
+  http_listen_port: 0
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: <URL that includes username and token>
+
+scrape_configs:
+  - job_name: "fastify_app"
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: "fastify_app"
+          __path__: "<path to app config>"

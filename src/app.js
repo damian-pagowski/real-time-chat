@@ -1,4 +1,11 @@
-const fastify = require('fastify')({ logger: true });
+const fs = require('fs');
+const fastify = require('fastify')({
+    logger: {
+      level: 'info',
+      stream: fs.createWriteStream('./logs/app.log', { flags: 'a' }) // Append logs
+    }
+  });
+
 const fastifyCors = require('@fastify/cors');
 const helmet = require('@fastify/helmet');
 const websocket = require('@fastify/websocket');
